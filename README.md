@@ -1,30 +1,63 @@
 # AngleAssert
 
-Library to compare and assert HTML. 
+Library to compare and assert HTML. Supports validating that two HTML string are equivalent, by comparing the parsed DOM rather than the exact string which allows for insignificant differences such as which quote marks that are used the or the order of attributes or class names.  
 
 HTML parsing done using [AngleSharp](https://github.com/AngleSharp/AngleSharp)
 
 ## Usage
 
-The HtmlComparer class implements IEqualityComparer&lt;string&gt; to make it easy to use directly with many Assertion libraries.
+The primary class of this library is the ``HtmlComparer``. This class can be used to compare two HTML strings.
+```csharp
+var result = HtmlComparer.Default.Equals("<p id='my' class='one two'>expected</p>", 
+                                         "<p class=\"two one\" id=\"my\">actual</p>");
+```
 
-Example of use with the default xUnit.net string assertions.
+The ``Equals`` method of the ``HtmlComparer`` class returns a ``HtmlCompareResult`` object. This object can be implicitly be converted to a boolean, but it also exposes properties that contains additional information about the element where the compare failed so that a more detailed message can be provided to users.
 
-Assert.Equal("&lt;p&gt;expected&lt;/p&gt;", "&lt;p&gt;actual&lt;/p&gt;", HtmlComparer.Default);
+It is also possible to compare a specific element of the HTML string by providing a selector to the ``Equals`` method.
+```csharp
+var result = HtmlComparer.Default.Equals("<em>expected</em>", "<div><p>em>actual</em></p></div><p>other</p>", "div > p");
+```
 
-The Equals method of the HtmlComparer returns a HtmlCompareResult object. This object can be implicitly be converted to a boolean, 
-but it also exposes properties that contains additional information about the element where the compare failed so that a more detailed 
-message can be provided to users.
+### Assertions
+
+The ``HtmlComparer`` class implements ``IEqualityComparer<string>`` to make it easy to use directly with many assertion libraries.
+
+Example of use together with the default xUnit.net string assertions.
+
+```csharp
+Assert.Equal("<p>expected</p>", "<p>actual</p>", HtmlComparer.Default);
+```
 
 ### xUnit.net integration
 
-Custom assertions for xUnit.net v2, for developers using the source-based assert library via the xunit.assert.source NuGet package can be found in the AngleAssert.Xunit project. 
+Custom assertions for xUnit.net v2, for developers using the source-based assert library via the xunit.assert.source NuGet package can be found in the AngleAssert.Xunit project.
+
+Example of use with the xUnit.net Assert partial extensions
+
+```csharp
+Assert.Html("<p>expected</p>", "<p>actual</p>");
+```
+
+Example of selector usage:
+
+```csharp
+Assert.Html("<p>expected</p>", "<div class='one'><p>actual</p><div>", "div.one");
+```
 
 ## Compare options
 
-The default comparer, accessible through HtmlComparer.Default, uses a common set of compare options, but you can create a customized comparer by passing in your own options.
+The default comparer, accessible through ``HtmlComparer.Default``, uses a common set of compare options, but you can create a customized comparer by passing in your own options.
 
-var comparer = new HtmlComparer(new HtmlCompareOptions { IgnoreAdditionalAttributes = false, IgnoreAdditionalClassNames = true, IgnoreClassNameOrder = false });
+```csharp
+var comparer = new HtmlComparer(
+                   new HtmlCompareOptions 
+                   { 
+                       IgnoreAdditionalAttributes = false, 
+                       IgnoreAdditionalClassNames = true, 
+                       IgnoreClassNameOrder = false 
+                   });
+```
 
 ## License
 
