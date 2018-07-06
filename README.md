@@ -59,6 +59,13 @@ var comparer = new HtmlComparer(
                    });
 ```
 
+## NuGet packages
+
+AngleAssert is available through nuget.org as two separate packages:
+* https://www.nuget.org/packages/AngleAssert
+* https://www.nuget.org/packages/AngleAssert.Xunit
+
+
 ## License
 
 The MIT License (MIT)
