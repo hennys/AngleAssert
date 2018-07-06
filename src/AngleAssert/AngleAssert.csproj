@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\..\build\common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <VersionPrefix>0.1.0</VersionPrefix>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\AngleAssert.xml</DocumentationFile>
-    <WarningsAsErrors />
+    <Description>Compare and assert generated HTML without hassle</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
