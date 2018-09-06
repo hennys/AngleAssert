@@ -16,12 +16,6 @@ namespace AngleAssert
         public string WildcardElementName { get; set; } = DefaultWildcardElementName;
 
         /// <summary>
-        /// When comparing using a selector, this property will define how multiple selector matches should be treated.
-        /// The default mode is to consider multiple matches a mismatch. See <see cref="ElementSelectionMode"/> for additional options.
-        /// </summary>
-        public ElementSelectionMode ElementSelectionMode { get; set; } = ElementSelectionMode.Default;
-
-        /// <summary>
         /// When comparing using a selector, this property indicates if the selected element should itself be included in the comparison.
         /// The default value is <c>false</c>.
         /// </summary>

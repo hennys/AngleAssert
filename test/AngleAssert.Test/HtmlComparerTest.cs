@@ -286,9 +286,7 @@ namespace AngleAssert
                 <section class='someClass'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Default });
-
-            Assert.True(comparer.Equals(expected, candidate, ".someClass"));
+            Assert.True(HtmlComparer.Default.Equals(expected, candidate, ".someClass", ElementSelectionMode.First));
         }
 
         [Fact]
@@ -301,9 +299,7 @@ namespace AngleAssert
                 <section class='someClass'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Default });
-
-            var result = comparer.Equals(expected, candidate, ".someClass");
+            var result = HtmlComparer.Default.Equals(expected, candidate, ".someClass", ElementSelectionMode.First);
 
             AssertMismatch(result, expected, "<p>nope</p>");
         }
@@ -319,9 +315,7 @@ namespace AngleAssert
                 <section class='three'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Single });
-
-            Assert.True(comparer.Equals(expected, candidate, ".two"));
+            Assert.True(HtmlComparer.Default.Equals(expected, candidate, ".two", ElementSelectionMode.Single));
         }
 
         [Fact]
@@ -335,9 +329,7 @@ namespace AngleAssert
                 <section class='someClass'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Single });
-
-            var result = comparer.Equals(expected, candidate, ".someClass");
+            var result = HtmlComparer.Default.Equals(expected, candidate, ".someClass", ElementSelectionMode.Single);
 
             AssertMismatch(result, reason: HtmlCompareMismatchReason.MultipleElementsFound);
         }
@@ -353,9 +345,7 @@ namespace AngleAssert
                 <section class='someClass'><p>text</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.All });
-
-            Assert.True(comparer.Equals(expected, candidate, ".someClass"));
+            Assert.True(HtmlComparer.Default.Equals(expected, candidate, ".someClass", ElementSelectionMode.All));
         }
 
         [Fact]
@@ -369,9 +359,7 @@ namespace AngleAssert
                 <section class='someClass'><p>text</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.All });
-
-            var result = comparer.Equals(expected, candidate, ".someClass");
+            var result = HtmlComparer.Default.Equals(expected, candidate, ".someClass", ElementSelectionMode.All);
 
             AssertMismatch(result, expected, "<p>nope</p>");
         }
@@ -387,8 +375,7 @@ namespace AngleAssert
                 <section class='someClass'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Any });
-            Assert.True(comparer.Equals(expected, candidate, ".someClass"));
+            Assert.True(HtmlComparer.Default.Equals(expected, candidate, ".someClass", ElementSelectionMode.Any));
         }
 
         [Fact]
@@ -402,9 +389,7 @@ namespace AngleAssert
                 <section class='someClass'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Any });
-
-            var result = comparer.Equals(expected, candidate, ".someClass");
+            var result = HtmlComparer.Default.Equals(expected, candidate, ".someClass", ElementSelectionMode.Any);
 
             AssertMismatch(result, expected, "<p>hardly</p>");
         }
@@ -498,33 +483,25 @@ namespace AngleAssert
         [Fact]
         public void Contains_WithSelectionModeSingle_WhenSelectorMatchesMultipleElements_ShouldReturnFalse()
         {
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Single });
-
-            Assert.False(comparer.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p"));
+            Assert.False(HtmlComparer.Default.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p", ElementSelectionMode.Single));
         }
 
         [Fact]
         public void Contains_WithSelectionModeFirst_WhenSelectorMatchesMultipleElements_ShouldReturnTrue()
         {
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Default });
-
-            Assert.True(comparer.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p"));
+            Assert.True(HtmlComparer.Default.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p", ElementSelectionMode.First));
         }
 
         [Fact]
         public void Contains_WithSelectionModeAll_WhenSelectorMatchesMultipleElements_ShouldReturnTrue()
         {
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.All });
-
-            Assert.True(comparer.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p"));
+            Assert.True(HtmlComparer.Default.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p", ElementSelectionMode.All));
         }
 
         [Fact]
         public void Contains_WithSelectionModeAny_WhenSelectorMatchesMultipleElements_ShouldReturnTrue()
         {
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Any });
-
-            Assert.True(comparer.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p"));
+            Assert.True(HtmlComparer.Default.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p", ElementSelectionMode.Any));
         }
 
         [Fact]
