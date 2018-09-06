@@ -43,13 +43,13 @@ namespace AngleAssert
         /// </summary>
         /// <param name="html">A string representing the HTML that should be checked.</param>
         /// <param name="selector">The CSS selector that should be used to find a matching element.</param>
-        /// <param name="selectionMode">The selection mode that should be used.</param>
         /// <returns><c>True</c> if an element that matched the selector was found; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// Set <paramref name="selectionMode"/> to to <see cref="ElementSelectionMode.Single"/> if
-        /// you want this method to return <c>false</c> in case multple matching element are found.
+        /// Initialize the <see cref="HtmlComparer"/> with an options instance where <see cref="HtmlCompareOptions.ElementSelectionMode"/>
+        /// is set to <see cref="ElementSelectionMode.Single"/> if you want this method to return <c>false</c> in case
+        /// multple matching element are found.
         /// </remarks>
-        public bool Contains(string html, string selector, ElementSelectionMode selectionMode = ElementSelectionMode.First)
+        public bool Contains(string html, string selector)
         {
             if (selector == null) throw new ArgumentNullException(nameof(selector));
             if (string.IsNullOrWhiteSpace(selector)) throw new ArgumentException("Selector cannot be empty.", nameof(selector));
@@ -58,7 +58,7 @@ namespace AngleAssert
 
             var bodyElement = _parser.ParseElements(html);
 
-            if (selectionMode == ElementSelectionMode.Single)
+            if (_options.ElementSelectionMode == ElementSelectionMode.Single)
             {
                 return bodyElement.QuerySelectorAll(selector).Length == 1;
             }
@@ -72,9 +72,8 @@ namespace AngleAssert
         /// <param name="expected">A string represeting the expected HTML that the <paramref name="html"/> should be compared against.</param>
         /// <param name="html">A string representing the HTML that contains the element that should be checked.</param>
         /// <param name="selector">The CSS selector that should be used to find a matching element.</param>
-        /// <param name="selectionMode">The selection mode that should be used.</param>
         /// <returns><c>True</c> if the selected element matched the expected html; otherwise <c>false</c>.</returns>
-        public HtmlCompareResult Equals(string expected, string html, string selector, ElementSelectionMode selectionMode = ElementSelectionMode.First)
+        public HtmlCompareResult Equals(string expected, string html, string selector)
         {
             if (selector == null) throw new ArgumentNullException(nameof(selector));
             if (string.IsNullOrWhiteSpace(selector)) throw new ArgumentException("Selector cannot be empty.", nameof(selector));
@@ -82,7 +81,7 @@ namespace AngleAssert
             var bodyElement = _parser.ParseElements(html);
 
             // Default selection mode will only need the first element
-            if (selectionMode == ElementSelectionMode.First)
+            if (_options.ElementSelectionMode == ElementSelectionMode.Default)
             {
                 var element = bodyElement.QuerySelector(selector);
                 return element == null ? HtmlCompareResult.ElementNotFound : Equals(expected, element);
@@ -95,7 +94,7 @@ namespace AngleAssert
                 return HtmlCompareResult.ElementNotFound;
             }
 
-            if (selectionMode == ElementSelectionMode.Single)
+            if (_options.ElementSelectionMode == ElementSelectionMode.Single)
             {
                 if (elements.Length > 1)
                 {
@@ -107,12 +106,12 @@ namespace AngleAssert
 
             var results = elements.Select(el => Equals(expected, el));
 
-            if (selectionMode == ElementSelectionMode.All)
+            if (_options.ElementSelectionMode == ElementSelectionMode.All)
             {
                 return results.FirstOrDefault(r => !r.Matches) ?? HtmlCompareResult.Match;
             }
 
-            if (selectionMode == ElementSelectionMode.Any)
+            if (_options.ElementSelectionMode == ElementSelectionMode.Any)
             {
                 return results.FirstOrDefault(r => r.Matches) ?? results.First();
             }

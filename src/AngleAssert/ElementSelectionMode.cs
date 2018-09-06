@@ -10,7 +10,7 @@ namespace AngleAssert
         /// <summary>
         /// Only the first element matched by the selector will be compared.
         /// </summary>
-        First,
+        Default,
 
         /// <summary>
         /// Only one element can be matched by the selector to consider it as a match.
