@@ -65,6 +65,9 @@ AngleAssert is available through nuget.org as two separate packages:
 * https://www.nuget.org/packages/AngleAssert
 * https://www.nuget.org/packages/AngleAssert.Xunit
 
+## Build status
+
+[![Build status](https://ci.appveyor.com/api/projects/status/xbbq0vecqd8glf50?svg=true)](https://ci.appveyor.com/project/hennys/angleassert)
 
 ## License
 
