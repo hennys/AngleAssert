@@ -19,7 +19,7 @@ namespace AngleAssert
         /// When comparing using a selector, this property will define how multiple selector matches should be treated.
         /// The default mode is to consider multiple matches a mismatch. See <see cref="ElementSelectionMode"/> for additional options.
         /// </summary>
-        public ElementSelectionMode ElementSelectionMode { get; set; } = ElementSelectionMode.Default;
+        public ElementSelectionMode ElementSelectionMode { get; set; } = ElementSelectionMode.First;
 
         /// <summary>
         /// When comparing using a selector, this property indicates if the selected element should itself be included in the comparison.

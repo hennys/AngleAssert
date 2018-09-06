@@ -81,7 +81,7 @@ namespace AngleAssert
             var bodyElement = _parser.ParseElements(html);
 
             // Default selection mode will only need the first element
-            if (_options.ElementSelectionMode == ElementSelectionMode.Default)
+            if (_options.ElementSelectionMode == ElementSelectionMode.First)
             {
                 var element = bodyElement.QuerySelector(selector);
                 return element == null ? HtmlCompareResult.ElementNotFound : Equals(expected, element);

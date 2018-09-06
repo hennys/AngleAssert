@@ -286,7 +286,7 @@ namespace AngleAssert
                 <section class='someClass'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Default });
+            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.First });
 
             Assert.True(comparer.Equals(expected, candidate, ".someClass"));
         }
@@ -301,7 +301,7 @@ namespace AngleAssert
                 <section class='someClass'><p>fake</p></section>
             ";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Default });
+            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.First });
 
             var result = comparer.Equals(expected, candidate, ".someClass");
 
@@ -506,7 +506,7 @@ namespace AngleAssert
         [Fact]
         public void Contains_WithSelectionModeFirst_WhenSelectorMatchesMultipleElements_ShouldReturnTrue()
         {
-            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.Default });
+            var comparer = new HtmlComparer(new HtmlCompareOptions { ElementSelectionMode = ElementSelectionMode.First });
 
             Assert.True(comparer.Contains("<div><p id='one' class='two'>text</p><p>more</p></div>", "p"));
         }

@@ -79,7 +79,7 @@ namespace Xunit
         /// <param name="ignoreAdditionalClassNames">Indicates if additional class names on any element in the candidate HTML should be ignored.</param>
         /// <param name="ignoreClassNameOrder">Indicates if the order of class names in the candidate HTML should be ignored</param>
         /// <exception cref="HtmlException">Thrown when the HTML strings are not equivalent</exception>
-        public static void Html(string expected, string html, string selector, ElementSelectionMode elementSelectionMode = ElementSelectionMode.Default, bool ignoreAdditionalAttributes = false, bool ignoreAdditionalClassNames = false, bool ignoreClassNameOrder = true)
+        public static void Html(string expected, string html, string selector, ElementSelectionMode elementSelectionMode = ElementSelectionMode.First, bool ignoreAdditionalAttributes = false, bool ignoreAdditionalClassNames = false, bool ignoreClassNameOrder = true)
         {
             GuardArgumentNotNull(nameof(expected), expected);
             GuardArgumentNotNull(nameof(selector), selector);
