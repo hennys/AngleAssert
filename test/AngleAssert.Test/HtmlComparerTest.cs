@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace AngleAssert
@@ -429,6 +431,18 @@ namespace AngleAssert
             Assert.True(comparer.Equals(expected, candidate, "div > p"));
         }
 
+        [Fact]
+        public void Equals_WithSimpleHtmlDocument_WhenSelectedElementMatchesExpected_ShouldReturnMatch()
+        {
+            Assert.True(HtmlComparer.Default.Equals("Another <em>paragraph</em> of text.", SimpleHtmlDocument, "h2 + p"));
+        }
+
+        [Fact]
+        public void Equals_WithComplexHtmlDocument_WhenSelectedElementMatchesExpected_ShouldReturnMatch()
+        {
+            Assert.True(HtmlComparer.Default.Equals("1", ComplexHtmlDocument, "a.social-count"));
+        }
+
         #endregion
 
         #region Contains
@@ -549,7 +563,35 @@ namespace AngleAssert
             Assert.False(HtmlComparer.Default.Contains("<div><p id='one' class='two'>text</p></div>", "p.TWO"));
         }
 
+        [Fact]
+        public void Contains_WhenSelectorMatchesElementInSimpleHtmlDocument_ShouldReturnTrue()
+        {
+            Assert.True(HtmlComparer.Default.Contains(SimpleHtmlDocument, "main > h1"));
+        }
+
+        [Fact]
+        public void Contains_WhenSelectorMatchesElementInComplexHtmlDocument_ShouldReturnTrue()
+        {
+            Assert.True(HtmlComparer.Default.Contains(ComplexHtmlDocument, "svg.octicon-mark-github"));
+        }
+
         #endregion
+
+        private static string _simpleHtmlDoc;
+        private static string _complexHtmlDoc;
+
+        private static string SimpleHtmlDocument => _simpleHtmlDoc ?? (_simpleHtmlDoc = GetResourceString("simple.html"));
+
+        private static string ComplexHtmlDocument => _complexHtmlDoc ?? (_complexHtmlDoc = GetResourceString("complex.html"));
+
+        private static string GetResourceString(string fileName)
+        {
+            using (var stream = typeof(HtmlComparerTest).Assembly.GetManifestResourceStream($"AngleAssert.Resources.{fileName}"))
+            using (var reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
+        }
 
         private static void AssertElementNotFound(HtmlCompareResult result)
             => AssertMismatch(result, reason: HtmlCompareMismatchReason.ElementNotFound);

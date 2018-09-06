@@ -17,4 +17,9 @@
     <ProjectReference Include="..\..\src\AngleAssert\AngleAssert.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Resources\*.html" />
+    <EmbeddedResource Include="Resources\*.html" />
+  </ItemGroup>
+
 </Project>
