@@ -31,6 +31,7 @@ namespace AngleAssert
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlComparer"/> class with a specific set of options.
         /// </summary>
+        /// <param name="options">The set of options that should be used.</param>
         public HtmlComparer(HtmlCompareOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -137,11 +138,6 @@ namespace AngleAssert
                 return HtmlCompareResult.Mismatch(expected, html);
             }
 
-            if (StringComparer.Ordinal.Equals(expected.Trim(), html.Trim()))
-            {
-                return HtmlCompareResult.Match;
-            }
-
             var parentElement = _parser.ParseElements(html);
 
             return Equals(expected, parentElement);
@@ -166,7 +162,7 @@ namespace AngleAssert
 
         private bool ElementsAreEqual(INodeList listX, INodeList listY)
         {
-            foreach ((var nodeX, var nodeY) in ZipAll(listX, listY, NotIsComment))
+            foreach ((var nodeX, var nodeY) in ZipAll(listX, listY, SignificantNodes))
             {
                 if (!ElementsAreEqual(nodeX, nodeY))
                 {
@@ -317,7 +313,16 @@ namespace AngleAssert
 
         int IEqualityComparer<string>.GetHashCode(string obj) => throw new NotSupportedException();
 
-        private static bool NotIsComment(INode node) => node.NodeType != NodeType.Comment;
+        private bool SignificantNodes(INode node)
+        {
+            if (node.NodeType == NodeType.Comment) return false;
+
+            if (_options.IgnoreEmptyTextNodes && node.NodeType == NodeType.Text)
+            {
+                return !string.IsNullOrWhiteSpace(node.NodeValue);
+            }
+            return true;
+        }
 
         private static IEnumerable<(T itemX, T itemY)> ZipAll<T>(IEnumerable<T> listX, IEnumerable<T> listY, Func<T, bool> predicate)
         {

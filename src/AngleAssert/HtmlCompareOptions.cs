@@ -46,10 +46,16 @@ namespace AngleAssert
         public bool IgnoreAdditionalAttributes { get; set; }
 
         /// <summary>
+        /// Indicates if empty text nodes should be ignored when comparing HTML. 
+        /// The default value is <c>true</c>.
+        /// </summary>
+        public bool IgnoreEmptyTextNodes { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the <see cref="StringComparer"/> that should be used to compare text elements.
         /// The default comparer is <see cref="StringComparer.Ordinal"/>.
         /// </summary>
-        public StringComparer TextComparer { get; set; } = StringComparer.Ordinal;
+        public StringComparer TextComparer { get; set; } = HtmlTextComparer.Ordinal;
 
         /// <summary>
         /// Gets or sets the <see cref="StringComparer"/> that should be used to compare attribute values.

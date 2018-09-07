@@ -12,10 +12,10 @@ namespace AngleAssert
         [Theory]
         [InlineData(null, null)]
         [InlineData("", "")]
-        [InlineData(" ", " ")]
+        [InlineData(" ", "   ")]
         [InlineData(null, "")]
         [InlineData(" ", "\t")]
-        [InlineData("some text", " some text ")]
+        [InlineData("different internal whitespace", "different   internal   whitespace")]
         public void Equals_WithSimpleMatchingTextStrings_ShouldReturnMatch(string expected, string candidate)
         {
             Assert.True(HtmlComparer.Default.Equals(expected, candidate));
@@ -24,7 +24,6 @@ namespace AngleAssert
         [Theory]
         [InlineData(null, "some string")]
         [InlineData("some string", null)]
-        [InlineData("different whitespace", "different    whitespace")]
         [InlineData("different casing", "Different Casing")]
         public void Equals_WithSimpleNonMatchingTextStrings_ShouldReturnMismatch(string expected, string candidate)
         {
@@ -33,6 +32,7 @@ namespace AngleAssert
 
         [Theory]
         [InlineData("<p>text</p>", "<p>text</p>")]
+        [InlineData("<p>text</p>", " <p>text</p> ")]
         public void Equals_WithMatchingHtmlFragments_ShouldReturnMatch(string expected, string candidate)
         {
             Assert.True(HtmlComparer.Default.Equals(expected, candidate));
@@ -40,6 +40,7 @@ namespace AngleAssert
 
         [Theory]
         [InlineData("<p>text</p>", "<strong>text</strong>")]
+        [InlineData("<p>text</p>", "<p> text </p>")]
         [InlineData("<p>text</p>", "<p><strong>text</strong></p>")]
         [InlineData("<p>text</p>", "<p>text<strong>content</strong></p>")]
         [InlineData("<p>text<strong>content</strong></p>", "<p>text</p>")]
@@ -77,6 +78,12 @@ namespace AngleAssert
         public void Equals_WhenHtmlContainsComment_ShouldReturnMatch()
         {
             Assert.True(HtmlComparer.Default.Equals("<p id='one'>text</p>", "<p id='one'><!--comment-->text</p>"));
+        }
+
+        [Fact]
+        public void Equals_WhenEmptyTextNodesAreDifferent_ShouldReturnMatch()
+        {
+            Assert.True(HtmlComparer.Default.Equals("<div><div>text</div></div>", "<div> <div>text</div> </div>"));
         }
 
         [Fact]
@@ -435,6 +442,12 @@ namespace AngleAssert
         public void Equals_WithSimpleHtmlDocument_WhenSelectedElementMatchesExpected_ShouldReturnMatch()
         {
             Assert.True(HtmlComparer.Default.Equals("Another <em>paragraph</em> of text.", SimpleHtmlDocument, "h2 + p"));
+        }
+
+        [Fact]
+        public void Equals_WithSimpleHtmlDocument_WhenOnlyIndentationDiffer_ShouldReturnMatch()
+        {
+            Assert.True(HtmlComparer.Default.Equals("<span>Indented html</span>", SimpleHtmlDocument, "#indented"));
         }
 
         [Fact]
