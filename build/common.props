@@ -10,6 +10,7 @@
     <PackageTags>AngleAssert</PackageTags>
     <PackageOutputPath>..\..\$(ProjectDir)artifacts\</PackageOutputPath>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IsTestProject>false</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
