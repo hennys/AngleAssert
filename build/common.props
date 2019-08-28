@@ -5,7 +5,7 @@
     <WarningsAsErrors />
     <Company></Company>
     <Authors>Henrik Nystrom</Authors>
-    <Copyright>© 2018 Henrik Nystrom</Copyright>
+    <Copyright>© 2019 Henrik Nystrom</Copyright>
     <PackageProjectUrl>http://github.com/hennys/AngleAssert</PackageProjectUrl>
     <PackageTags>AngleAssert</PackageTags>
     <PackageOutputPath>..\..\$(ProjectDir)artifacts\</PackageOutputPath>
