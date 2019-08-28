@@ -34,11 +34,14 @@ namespace AngleAssert
 
         private static string RemoveInsignificantWhitespace(ref string s)
         {
-            if (s is null) return null;
+            if (s is null)
+            {
+                return null;
+            }
 
             var result = new char[s.Length];
-            int j = 0;
-            bool whitespace = false;
+            var j = 0;
+            var whitespace = false;
             for (var i = 0; i < s.Length; i++)
             {
                 if (char.IsWhiteSpace(s, i))
@@ -54,7 +57,10 @@ namespace AngleAssert
                 result[j++] = s[i];
             }
 
-            if (whitespace && j > 0) result[j++] = ' ';
+            if (whitespace && j > 0)
+            {
+                result[j++] = ' ';
+            }
 
             return new string(result, 0, j);
         }

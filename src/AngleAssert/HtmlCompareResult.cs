@@ -65,17 +65,17 @@ namespace AngleAssert
         /// <summary>
         /// Gets a <see cref="HtmlCompareResult"/> representing a match.
         /// </summary>
-        public readonly static HtmlCompareResult Match = new HtmlCompareResult(true);
+        public static readonly HtmlCompareResult Match = new HtmlCompareResult(true);
 
         /// <summary>
         /// Gets a <see cref="HtmlCompareResult"/> representing a match.
         /// </summary>
-        public readonly static HtmlCompareResult ElementNotFound = new HtmlCompareResult(false, reason: HtmlCompareMismatchReason.ElementNotFound);
+        public static readonly HtmlCompareResult ElementNotFound = new HtmlCompareResult(false, reason: HtmlCompareMismatchReason.ElementNotFound);
 
         /// <summary>
         /// Gets a <see cref="HtmlCompareResult"/> representing a match.
         /// </summary>
-        public readonly static HtmlCompareResult MultipleElementsFound = new HtmlCompareResult(false, reason: HtmlCompareMismatchReason.MultipleElementsFound);
+        public static readonly HtmlCompareResult MultipleElementsFound = new HtmlCompareResult(false, reason: HtmlCompareMismatchReason.MultipleElementsFound);
 
         /// <summary>
         /// Gets a <see cref="HtmlCompareResult"/> representing a mismatch.

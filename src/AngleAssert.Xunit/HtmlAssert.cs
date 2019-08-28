@@ -1,5 +1,4 @@
-﻿using System;
-using AngleAssert;
+﻿using AngleAssert;
 using Xunit.Sdk;
 
 namespace Xunit

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AngleAssert
+﻿namespace AngleAssert
 {
     /// <summary>
     /// Describes how elements should be selected and compared by the <see cref="HtmlComparer"/>.

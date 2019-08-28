@@ -52,10 +52,20 @@ namespace AngleAssert
         /// </remarks>
         public bool Contains(string html, string selector)
         {
-            if (selector == null) throw new ArgumentNullException(nameof(selector));
-            if (string.IsNullOrWhiteSpace(selector)) throw new ArgumentException("Selector cannot be empty.", nameof(selector));
+            if (selector == null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
 
-            if (string.IsNullOrWhiteSpace(html)) return false;
+            if (string.IsNullOrWhiteSpace(selector))
+            {
+                throw new ArgumentException("Selector cannot be empty.", nameof(selector));
+            }
+
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                return false;
+            }
 
             var bodyElement = _parser.ParseElements(html);
 
@@ -76,8 +86,15 @@ namespace AngleAssert
         /// <returns><c>True</c> if the selected element matched the expected html; otherwise <c>false</c>.</returns>
         public HtmlCompareResult Equals(string expected, string html, string selector)
         {
-            if (selector == null) throw new ArgumentNullException(nameof(selector));
-            if (string.IsNullOrWhiteSpace(selector)) throw new ArgumentException("Selector cannot be empty.", nameof(selector));
+            if (selector == null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
+            if (string.IsNullOrWhiteSpace(selector))
+            {
+                throw new ArgumentException("Selector cannot be empty.", nameof(selector));
+            }
 
             var bodyElement = _parser.ParseElements(html);
 
@@ -315,7 +332,10 @@ namespace AngleAssert
 
         private bool SignificantNodes(INode node)
         {
-            if (node.NodeType == NodeType.Comment) return false;
+            if (node.NodeType == NodeType.Comment)
+            {
+                return false;
+            }
 
             if (_options.IgnoreEmptyTextNodes && node.NodeType == NodeType.Text)
             {
