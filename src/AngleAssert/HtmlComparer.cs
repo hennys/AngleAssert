@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AngleSharp;
 using AngleSharp.Dom;
-using AngleSharp.Parser.Html;
+using AngleSharp.Html.Parser;
 
 namespace AngleAssert
 {
@@ -16,7 +17,7 @@ namespace AngleAssert
         // Keep private as it is a mutable class
         private static readonly HtmlCompareOptions DefaultOptions = new HtmlCompareOptions();
         private readonly HtmlCompareOptions _options;
-        private readonly HtmlParser _parser;
+        private readonly IHtmlParser _parser;
 
         /// <summary>
         /// Gets a <see cref="HtmlComparer"/> that uses the default <see cref="HtmlCompareOptions"/>.
@@ -36,7 +37,8 @@ namespace AngleAssert
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
-            _parser = new HtmlParser();
+            var context = BrowsingContext.New(Configuration.Default);
+            _parser = context.GetService<IHtmlParser>();
         }
 
         /// <summary>
