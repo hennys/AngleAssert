@@ -605,9 +605,6 @@ namespace AngleAssert
             }
         }
 
-        private static void AssertElementNotFound(HtmlCompareResult result)
-            => AssertMismatch(result, reason: HtmlCompareMismatchReason.ElementNotFound);
-
         private static void AssertMismatch(HtmlCompareResult result, string expected = null, string actual = null, HtmlCompareMismatchReason reason = HtmlCompareMismatchReason.Default)
         {
             var expectedResult = HtmlCompareResult.Mismatch(expected, actual?.Replace('\'', '"'), reason);
