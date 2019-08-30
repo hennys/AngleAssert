@@ -22,7 +22,7 @@ namespace Xunit
         {
             GuardArgumentNotNull(nameof(expected), expected);
 
-            Equal(expected, actual, HtmlComparer.Default);
+            Equal(expected, actual, HtmlComparer.Fragment);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Xunit
             GuardArgumentNotNull(nameof(expected), expected);
             GuardArgumentNotNull(nameof(selector), selector);
 
-            var result = HtmlComparer.Default.Equals(expected, html, selector);
+            var result = HtmlComparer.Fragment.Equals(expected, html, selector);
             if (!result.Matches)
             {
                 throw new HtmlException(result, selector);
@@ -107,7 +107,7 @@ namespace Xunit
         {
             GuardArgumentNotNull(nameof(selector), selector);
 
-            if (!HtmlComparer.Default.Contains(html, selector))
+            if (!HtmlComparer.Fragment.Contains(html, selector))
             {
                 throw new HtmlElementException(html, selector);
             }

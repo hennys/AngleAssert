@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AngleSharp;
 using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 
 namespace AngleAssert
@@ -12,17 +13,24 @@ namespace AngleAssert
     /// </summary>
     public class HtmlComparer : IEqualityComparer<string>
     {
+        private const string StandardContextHtml = "<!DOCTYPE html><html><head><title></title></head><body></body></html>";
         private const string IdAttributeName = "id";
         private const string ClassAttributeName = "class";
         // Keep private as it is a mutable class
         private static readonly HtmlCompareOptions DefaultOptions = new HtmlCompareOptions();
         private readonly HtmlCompareOptions _options;
         private readonly IHtmlParser _parser;
+        private IElement _standardContextElement;
 
         /// <summary>
         /// Gets a <see cref="HtmlComparer"/> that uses the default <see cref="HtmlCompareOptions"/>.
         /// </summary>
         public static HtmlComparer Default { get; } = new HtmlComparer(DefaultOptions);
+
+        /// <summary>
+        /// Gets a <see cref="HtmlComparer"/> for comparing html fragments.
+        /// </summary>
+        public static HtmlComparer Fragment { get; } = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true });
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlComparer"/> class using the default options.
@@ -40,6 +48,8 @@ namespace AngleAssert
             var context = BrowsingContext.New(Configuration.Default);
             _parser = context.GetService<IHtmlParser>();
         }
+
+        private IElement StandardContextElement => _standardContextElement ?? (_standardContextElement = _parser.ParseDocument(StandardContextHtml).QuerySelector("body"));
 
         /// <summary>
         /// Checks if the provided HTML string contains an element represented by a selector.
@@ -68,16 +78,37 @@ namespace AngleAssert
             {
                 return false;
             }
-
-            var bodyElement = _parser.ParseElements(html);
+            var rootNode = GetRootElement(html);
 
             if (_options.ElementSelectionMode == ElementSelectionMode.Single)
             {
-                return bodyElement.QuerySelectorAll(selector).Length == 1;
+                return rootNode.QuerySelectorAll(selector).Length == 1;
             }
 
-            return bodyElement.QuerySelector(selector) != null;
+            return rootNode.QuerySelector(selector) != null;
         }
+
+        private IElement GetRootElement(string html)
+        {
+            if (_options.TreatHtmlAsFragment)
+            {
+                return ParseFragment(html);
+            }
+
+            return _parser.ParseDocument(html).DocumentElement;
+        }
+
+        private IElement ParseFragment(string html)
+        {
+            if (html.StartsWith("<!DOCTYPE html>") || html.StartsWith("<html>"))
+            {
+                return _parser.ParseDocument(html).DocumentElement;
+            }
+
+            var fragments = _parser.ParseFragment(html, StandardContextElement);
+            return fragments.First().GetRoot() as IElement;
+        }
+
 
         /// <summary>
         /// Checks if element in the provided HTML string matches an expected HTML string.
@@ -98,17 +129,17 @@ namespace AngleAssert
                 throw new ArgumentException("Selector cannot be empty.", nameof(selector));
             }
 
-            var bodyElement = _parser.ParseElements(html);
+            var rootNode = GetRootElement(html);
 
             // Default selection mode will only need the first element
             if (_options.ElementSelectionMode == ElementSelectionMode.First)
             {
-                var element = bodyElement.QuerySelector(selector);
+                var element = rootNode.QuerySelector(selector);
                 return element == null ? HtmlCompareResult.ElementNotFound : Equals(expected, element);
             }
 
             // All other selection modes needs all elements
-            var elements = bodyElement.QuerySelectorAll(selector);
+            var elements = rootNode.QuerySelectorAll(selector);
             if (elements.Length == 0)
             {
                 return HtmlCompareResult.ElementNotFound;
@@ -157,15 +188,19 @@ namespace AngleAssert
                 return HtmlCompareResult.Mismatch(expected, html);
             }
 
-            var parentElement = _parser.ParseElements(html);
+            if (_options.TreatHtmlAsFragment)
+            {
+                var parentElement = ParseFragment(html);
+                return Equals(expected, parentElement);
+            }
 
-            return Equals(expected, parentElement);
+            return ElementsAreEqual(_parser.ParseDocument(expected), _parser.ParseDocument(html)) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, html);
         }
 
         private HtmlCompareResult Equals(string expected, IElement element)
         {
-            var expectedParentElement = _parser.ParseElements(expected);
-
+            var expectedParentElement = ParseFragment(expected);
+            
             if (_options.IncludeSelectedElement)
             {
                 if (expectedParentElement.ChildElementCount > 1)

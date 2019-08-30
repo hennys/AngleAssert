@@ -16,6 +16,11 @@ namespace AngleAssert
         public string WildcardElementName { get; set; } = DefaultWildcardElementName;
 
         /// <summary>
+        /// Indicates if the html source should be treated as a html fragment or as a complete document.
+        /// </summary>
+        public bool TreatHtmlAsFragment { get; set; }
+
+        /// <summary>
         /// When comparing using a selector, this property will define how multiple selector matches should be treated.
         /// The default mode is to consider multiple matches a mismatch. See <see cref="ElementSelectionMode"/> for additional options.
         /// </summary>
