@@ -100,7 +100,6 @@ namespace AngleAssert
             {
                 throw new ArgumentNullException(nameof(selector));
             }
-
             if (string.IsNullOrWhiteSpace(selector))
             {
                 throw new ArgumentException("Selector cannot be empty.", nameof(selector));
@@ -111,18 +110,18 @@ namespace AngleAssert
             {
                 throw new ArgumentException($"The expected html cannot contain multiple child nodes when the ElementComparisonMode option is set to '{_options.ElementComparisonMode}'.", nameof(expected));
             }
-            else if (_options.ElementComparisonMode == ElementComparisonMode.Element && expectedRoot.FirstChild.HasChildNodes)
+            if (_options.ElementComparisonMode == ElementComparisonMode.Element && expectedRoot.FirstChild.HasChildNodes)
             {
                 throw new ArgumentException("The expected html cannot contain child nodes when the ElementComparisonMode option is set to Element.", nameof(expected));
             }
             var expectedNodeTree = CreateNodeTree(expectedRoot);
 
-            var root = ParseHtml(html, _options.TreatHtmlAsFragment);
+            var candidateRoot = ParseHtml(html, _options.TreatHtmlAsFragment);
 
             // Default selection mode will only need the first element
             if (_options.ElementSelectionMode == ElementSelectionMode.First)
             {
-                var element = root.QuerySelector(selector);
+                var element = candidateRoot.QuerySelector(selector);
                 if (element is null)
                 {
                     return HtmlCompareResult.ElementNotFound;
@@ -132,7 +131,7 @@ namespace AngleAssert
             }
 
             // All other selection modes needs all elements
-            var elements = root.QuerySelectorAll(selector);
+            var elements = candidateRoot.QuerySelectorAll(selector);
             if (elements.Length == 0)
             {
                 return HtmlCompareResult.ElementNotFound;
@@ -359,10 +358,12 @@ namespace AngleAssert
             {
                 var fragmentDoc = _parser.ParseDocument(StandardContextHtml);
                 fragmentDoc.Body.InnerHtml = html;
+                fragmentDoc.Body.Normalize();
                 return fragmentDoc.Body;
             }
 
             var doc = _parser.ParseDocument(html);
+            doc.DocumentElement.Normalize();
             return doc.DocumentElement;
         }
 
