@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AngleSharp;
 using AngleSharp.Dom;
+using AngleSharp.Html;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 
@@ -105,7 +106,17 @@ namespace AngleAssert
                 throw new ArgumentException("Selector cannot be empty.", nameof(selector));
             }
 
-            var expectedWalker = CreateTreeNodeList(ParseHtml(expected, true));
+            var expectedRoot = ParseHtml(expected, true);
+            if (_options.ElementComparisonMode != ElementComparisonMode.InnerHtml && expectedRoot.ChildElementCount > 1)
+            {
+                throw new ArgumentException($"The expected html cannot contain multiple child nodes when the ElementComparisonMode option is set to '{_options.ElementComparisonMode}'.", nameof(expected));
+            }
+            else if (_options.ElementComparisonMode == ElementComparisonMode.Element && expectedRoot.FirstChild.HasChildNodes)
+            {
+                throw new ArgumentException("The expected html cannot contain child nodes when the ElementComparisonMode option is set to Element.", nameof(expected));
+            }
+            var expectedNodeTree = CreateNodeTree(expectedRoot);
+
             var root = ParseHtml(html, _options.TreatHtmlAsFragment);
 
             // Default selection mode will only need the first element
@@ -117,7 +128,7 @@ namespace AngleAssert
                     return HtmlCompareResult.ElementNotFound;
                 }
 
-                return MatchesElement(expected, expectedWalker, element);
+                return MatchesElement(expected, expectedNodeTree, element);
             }
 
             // All other selection modes needs all elements
@@ -134,10 +145,10 @@ namespace AngleAssert
                     return HtmlCompareResult.Mismatch(reason: HtmlCompareMismatchReason.MultipleElementsFound);
                 }
 
-                return MatchesElement(expected, expectedWalker, elements[0]);
+                return MatchesElement(expected, expectedNodeTree, elements[0]);
             }
 
-            var results = elements.Select(el => MatchesElement(expected, expectedWalker, el));
+            var results = elements.Select(el => MatchesElement(expected, expectedNodeTree, el));
 
             if (_options.ElementSelectionMode == ElementSelectionMode.All)
             {
@@ -170,19 +181,37 @@ namespace AngleAssert
                 return HtmlCompareResult.Mismatch(expected, html);
             }
 
-            var expectedWalker = CreateTreeNodeList(ParseHtml(expected, _options.TreatHtmlAsFragment));
-            var htmlWalker = CreateTreeNodeList(ParseHtml(html, _options.TreatHtmlAsFragment));
+            var expectedNodeTree = CreateNodeTree(ParseHtml(expected, _options.TreatHtmlAsFragment));
+            var candidateNodeTree = CreateNodeTree(ParseHtml(html, _options.TreatHtmlAsFragment));
 
-            return TreesAreEqual(expectedWalker, htmlWalker) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, html);
+            return NodeTreesAreEqual(expectedNodeTree, candidateNodeTree) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, html);
         }
 
-        private HtmlCompareResult MatchesElement(string expected, TreeNodeList expectedWalker, IElement element)
+        private HtmlCompareResult MatchesElement(string expected, NodeTree expectedNodeTree, IElement element)
         {
-            var elementWalker = CreateTreeNodeList(element, _options.IncludeSelectedElement);
-            return TreesAreEqual(expectedWalker, elementWalker) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, element.InnerHtml);
+            if (_options.ElementComparisonMode == ElementComparisonMode.Element)
+            {
+                var expectedElement = expectedNodeTree.First();
+                if (NodesAreEqual(expectedElement, element))
+                {
+                    return HtmlCompareResult.Match;
+                }
+
+                return HtmlCompareResult.Mismatch(expected, HtmlMarkupFormatter.Instance.OpenTag(element, true));
+            }
+
+            var includeRoot = _options.ElementComparisonMode == ElementComparisonMode.OuterHtml;
+            var elementNodeTree = CreateNodeTree(element, includeRoot);
+
+            if (NodeTreesAreEqual(expectedNodeTree, elementNodeTree))
+            {
+                return HtmlCompareResult.Match;
+            }
+
+            return HtmlCompareResult.Mismatch(expected, includeRoot ? element.OuterHtml : element.InnerHtml);
         }
 
-        private bool TreesAreEqual(TreeNodeList expected, TreeNodeList candidate)
+        private bool NodeTreesAreEqual(NodeTree expected, NodeTree candidate)
         {
             foreach (var (itemX, itemY) in ZipAll(expected, candidate))
             {
@@ -328,7 +357,7 @@ namespace AngleAssert
         {
             if (treatAsFragment && !FragmentIsDocument(html))
             {
-                var fragmentDoc = CreateStandardDocument();
+                var fragmentDoc = _parser.ParseDocument(StandardContextHtml);
                 fragmentDoc.Body.InnerHtml = html;
                 return fragmentDoc.Body;
             }
@@ -337,9 +366,7 @@ namespace AngleAssert
             return doc.DocumentElement;
         }
 
-        private TreeNodeList CreateTreeNodeList(IElement root, bool includeRoot = false) => new TreeNodeList(root, _options.IgnoreEmptyTextNodes, includeRoot);
-
-        private IHtmlDocument CreateStandardDocument() => _parser.ParseDocument(StandardContextHtml);
+        private NodeTree CreateNodeTree(IElement root, bool includeRoot = false) => new NodeTree(root, _options.IgnoreEmptyTextNodes, includeRoot);
 
         private static bool FragmentIsDocument(string html) => html.StartsWith("<!DOCTYPE html>") || html.StartsWith("<html>");
 
@@ -378,23 +405,24 @@ namespace AngleAssert
             }
         }
 
-        private class TreeNodeList : IEnumerable<INode>
+        private class NodeTree : IEnumerable<INode>
         {
-            private readonly IElement _root;
             private readonly bool _includeRoot;
             private readonly bool _ignoreEmptyTextNodes;
 
-            public TreeNodeList(IElement root, bool ignoreEmptyTextNodes = false, bool includeRoot = false)
+            public NodeTree(IElement root, bool ignoreEmptyTextNodes = false, bool includeRoot = false)
             {
-                _root = root;
+                Root = root;
                 _includeRoot = includeRoot;
                 _ignoreEmptyTextNodes = ignoreEmptyTextNodes;
             }
 
+            public IElement Root { get; }
+
             public IEnumerator<INode> GetEnumerator()
             {
-                var root = _includeRoot ? _root.Parent : _root;
-                return new TreeWalkerEnumerator(_root.Owner.CreateTreeWalker(root, ~FilterSettings.Comment, NodeFilter));
+                var root = _includeRoot ? Root.Parent : Root;
+                return new NodeTreeEnumerator(Root.Owner.CreateTreeWalker(root, ~FilterSettings.Comment, NodeFilter));
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -407,7 +435,7 @@ namespace AngleAssert
                 }
 
                 // We must filter out siblings when including the root element
-                if (_includeRoot && !_root.Equals(node) && node.IsSiblingOf(_root))
+                if (_includeRoot && !Root.Equals(node) && node.IsSiblingOf(Root))
                 {
                     return FilterResult.Reject;
                 }
@@ -415,11 +443,11 @@ namespace AngleAssert
                 return FilterResult.Accept;
             }
 
-            private class TreeWalkerEnumerator : IEnumerator<INode>
+            private class NodeTreeEnumerator : IEnumerator<INode>
             {
                 private readonly ITreeWalker _walker;
 
-                public TreeWalkerEnumerator(ITreeWalker walker)
+                public NodeTreeEnumerator(ITreeWalker walker)
                 {
                     _walker = walker;
                 }

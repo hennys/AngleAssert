@@ -104,24 +104,24 @@ namespace Xunit
         /// <param name="expected">The expected HTML fragment element</param>
         /// <param name="html">The HTML document or fragment from which the element to compare should be selected from.</param>
         /// <param name="selector">A selector used to find the element to compare.</param>
-        /// <param name="includeSelectedElement">Indicated if the selected element itself should be included in the comparison or if only it's content should be compared.</param>
+        /// <param name="elementComparisonMode">Indicated if the selected element itself should be included in the comparison or if only it's content should be compared.</param>
         /// <param name="elementSelectionMode">Indicates how selected elements should be compared.</param>
         /// <param name="ignoreAdditionalAttributes">Indicates if additional attribute on any element in the candidate HTML should be ignored.</param>
         /// <param name="ignoreAdditionalClassNames">Indicates if additional class names on any element in the candidate HTML should be ignored.</param>
         /// <param name="ignoreClassNameOrder">Indicates if the order of class names in the candidate HTML should be ignored</param>
         /// <exception cref="HtmlException">Thrown when the HTML elements are not equivalent</exception>
-        public static void HtmlElement(string expected, string html, string selector, bool includeSelectedElement = false, ElementSelectionMode elementSelectionMode = ElementSelectionMode.First, bool ignoreAdditionalAttributes = false, bool ignoreAdditionalClassNames = false, bool ignoreClassNameOrder = true)
+        public static void HtmlElement(string expected, string html, string selector, ElementComparisonMode elementComparisonMode = ElementComparisonMode.InnerHtml, ElementSelectionMode elementSelectionMode = ElementSelectionMode.First, bool ignoreAdditionalAttributes = false, bool ignoreAdditionalClassNames = false, bool ignoreClassNameOrder = true)
         {
             GuardArgumentNotNull(nameof(expected), expected);
             GuardArgumentNotNull(nameof(selector), selector);
 
             var comparerOptions = new HtmlCompareOptions
             {
+                ElementComparisonMode = elementComparisonMode,
                 ElementSelectionMode = elementSelectionMode,
                 IgnoreAdditionalAttributes = ignoreAdditionalAttributes,
                 IgnoreAdditionalClassNames = ignoreAdditionalClassNames,
                 IgnoreClassNameOrder = ignoreClassNameOrder,
-                IncludeSelectedElement = includeSelectedElement,
                 TreatHtmlAsFragment = true
             };
 

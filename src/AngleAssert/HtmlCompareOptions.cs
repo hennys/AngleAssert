@@ -27,10 +27,10 @@ namespace AngleAssert
         public ElementSelectionMode ElementSelectionMode { get; set; } = ElementSelectionMode.First;
 
         /// <summary>
-        /// When comparing using a selector, this property indicates if the selected element should itself be included in the comparison.
-        /// The default value is <c>false</c>.
+        /// When comparing using a selector, this property indicates which part of the selection that should be included in the comparison.
+        /// The default value is to only compare the content of the element. See <see cref="ElementComparisonMode"/> for additional options.
         /// </summary>
-        public bool IncludeSelectedElement { get; set; }
+        public ElementComparisonMode ElementComparisonMode { get; set; } = ElementComparisonMode.InnerHtml;
 
         /// <summary>
         /// Indicates if the order of class names in the candidate HTML should be ignored.

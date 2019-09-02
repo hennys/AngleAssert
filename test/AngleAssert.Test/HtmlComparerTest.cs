@@ -437,7 +437,7 @@ namespace AngleAssert
         }
 
         [Fact]
-        public void Equals_WithSelectedElementComparisonOff_WhenSelectedElementMatchesExpected_ShouldReturnMismatch()
+        public void Equals_WithElementComparisonSetToInner_WhenSelectedElementMatchesExpected_ShouldReturnMismatch()
         {
             const string expected = "<p id='one'>text</p>";
             const string candidate = "<div><p id='one'>text</p><div>";
@@ -448,25 +448,81 @@ namespace AngleAssert
         }
 
         [Fact]
-        public void Equals_WithSelectedElementComparisonOn_WhenSelectedElementMatchesExpected_ShouldReturnMatch()
+        public void Equals_WithElementComparisonSetToOuter_WhenSelectedElementMatchesExpected_ShouldReturnMatch()
         {
             const string expected = "<p id='one'>text</p>";
             const string candidate = "<div><p id='one'>text</p></div>";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, IncludeSelectedElement = true });
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, ElementComparisonMode = ElementComparisonMode.OuterHtml });
 
             Assert.True(comparer.Equals(expected, candidate, "div > p"));
         }
 
         [Fact]
-        public void Equals_WithSelectedElementComparisonOn_WhenSelectedElementMatchesExpectedAndHasSiblings_ShouldReturnMatch()
+        public void Equals_WithElementComparisonSetToOuter_WhenSelectedElementMatchesExpectedAndHasSiblings_ShouldReturnMatch()
         {
             const string expected = "<p id='one'>text</p>";
             const string candidate = "<div><p id='one'>text</p><p>next</p></div>";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, IncludeSelectedElement = true });
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, ElementComparisonMode = ElementComparisonMode.OuterHtml });
 
             Assert.True(comparer.Equals(expected, candidate, "#one"));
+        }
+
+        [Fact]
+        public void Equals_WithElementComparisonSetToOuter_WhenExpectedContainsMultipleRootElements_ShouldThrow()
+        {
+            const string expected = "<p>one</p><p>two</p>";
+            const string candidate = "<div><p>not compared</p></div>";
+
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, ElementComparisonMode = ElementComparisonMode.OuterHtml });
+
+            Assert.Throws<ArgumentException>("expected", () => comparer.Equals(expected, candidate, "p"));
+        }
+
+        [Fact]
+        public void Equals_WithElementComparisonSetToElement_WhenSelectedElementMatchesElement_ShouldReturnMatch()
+        {
+            const string expected = "<p id='one'></p>";
+            const string candidate = "<div><p id='one'>something else</p></div>";
+
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, ElementComparisonMode = ElementComparisonMode.Element });
+
+            Assert.True(comparer.Equals(expected, candidate, "#one"));
+        }
+
+        [Fact]
+        public void Equals_WithElementComparisonSetToElementAndExpectedIsSelfClosing_WhenSelectedElementMatchesElement_ShouldReturnMatch()
+        {
+            const string expected = "<p id='one'/>";
+            const string candidate = "<div><p id='one'>something else</p></div>";
+
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, ElementComparisonMode = ElementComparisonMode.Element });
+
+            Assert.True(comparer.Equals(expected, candidate, "#one"));
+        }
+
+        [Fact]
+        public void Equals_WithElementComparisonSetToElement_WhenSelectedElementDiffer_ShouldReturnMismatch()
+        {
+            const string expected = "<main id='one'/>";
+            const string candidate = "<div><p id='one'>not compared</p></div>";
+
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, ElementComparisonMode = ElementComparisonMode.Element });
+
+            var result = comparer.Equals(expected, candidate, "#one");
+            AssertMismatch(result, expected, "<p id=\"one\">");
+        }
+
+        [Fact]
+        public void Equals_WithElementComparisonSetToElement_WhenExpectedContainsChildElements_ShouldThrow()
+        {
+            const string expected = "<p>This shouldn't be here</p>";
+            const string candidate = "<div><p>not compared</p></div>";
+
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, ElementComparisonMode = ElementComparisonMode.Element });
+
+            Assert.Throws<ArgumentException>("expected", () => comparer.Equals(expected, candidate, "p"));
         }
 
         [Fact]
