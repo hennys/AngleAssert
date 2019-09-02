@@ -2,15 +2,16 @@
 
 namespace Xunit.Sdk
 {
-#if XUNIT_VISIBILITY_INTERNAL
-    internal
-#else
-    public
-#endif
-    class HtmlElementException : XunitException
+    /// <summary>
+    /// Thrown when a HTML Element was expected, but couldn't be found.
+    /// </summary>
+    public sealed class HtmlContainsException : XunitException
     {
-        public HtmlElementException(string html, string selector)
-            : base($"{nameof(Assert)}.{nameof(Assert.HtmlElement)}() Failure")
+        /// <summary>
+        /// Creates a new <see cref="HtmlContainsException"/> instance
+        /// </summary>
+        public HtmlContainsException(string html, string selector)
+            : base($"{nameof(Assert)}.{nameof(Assert.HtmlContains)}() Failure")
         {
             Html = html;
             Selector = selector;

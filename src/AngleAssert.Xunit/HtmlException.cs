@@ -4,13 +4,14 @@ using AngleAssert;
 
 namespace Xunit.Sdk
 {
-#if XUNIT_VISIBILITY_INTERNAL
-    internal
-#else
-    public
-#endif
-    class HtmlException : AssertActualExpectedException
+    /// <summary>
+    /// Thrown when the provided HTML didn't match the expected HTML.
+    /// </summary>
+    public class HtmlException : AssertActualExpectedException
     {
+        /// <summary>
+        /// Creates a new <see cref="HtmlException"/> instance
+        /// </summary>
         public HtmlException(HtmlCompareResult result, string selector)
             : base(result.Expected, result.Actual, $"{nameof(Assert)}.{nameof(Assert.Html)}() Failure")
         {
@@ -18,10 +19,17 @@ namespace Xunit.Sdk
             Reason = result.Reason;
         }
 
+        /// <summary>
+        /// The selector that was used.
+        /// </summary>
         public string Selector { get; }
 
+        /// <summary>
+        /// The reason for the mismatch.
+        /// </summary>
         public HtmlCompareMismatchReason? Reason { get; }
 
+        /// <inheritdoc />
         public override string Message
         {
             get
