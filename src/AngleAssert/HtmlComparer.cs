@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using AngleSharp;
@@ -20,7 +21,6 @@ namespace AngleAssert
         private static readonly HtmlCompareOptions DefaultOptions = new HtmlCompareOptions();
         private readonly HtmlCompareOptions _options;
         private readonly IHtmlParser _parser;
-        private IElement _standardContextElement;
 
         /// <summary>
         /// Gets a <see cref="HtmlComparer"/> that uses the default <see cref="HtmlCompareOptions"/>.
@@ -49,8 +49,6 @@ namespace AngleAssert
             _parser = context.GetService<IHtmlParser>();
         }
 
-        private IElement StandardContextElement => _standardContextElement ?? (_standardContextElement = _parser.ParseDocument(StandardContextHtml).QuerySelector("body"));
-
         /// <summary>
         /// Checks if the provided HTML string contains an element represented by a selector.
         /// </summary>
@@ -78,7 +76,7 @@ namespace AngleAssert
             {
                 return false;
             }
-            var rootNode = GetRootElement(html);
+            var rootNode = ParseHtml(html, _options.TreatHtmlAsFragment);
 
             if (_options.ElementSelectionMode == ElementSelectionMode.Single)
             {
@@ -87,28 +85,6 @@ namespace AngleAssert
 
             return rootNode.QuerySelector(selector) != null;
         }
-
-        private IElement GetRootElement(string html)
-        {
-            if (_options.TreatHtmlAsFragment)
-            {
-                return ParseFragment(html);
-            }
-
-            return _parser.ParseDocument(html).DocumentElement;
-        }
-
-        private IElement ParseFragment(string html)
-        {
-            if (html.StartsWith("<!DOCTYPE html>") || html.StartsWith("<html>"))
-            {
-                return _parser.ParseDocument(html).DocumentElement;
-            }
-
-            var fragments = _parser.ParseFragment(html, StandardContextElement);
-            return fragments.First().GetRoot() as IElement;
-        }
-
 
         /// <summary>
         /// Checks if element in the provided HTML string matches an expected HTML string.
@@ -129,17 +105,23 @@ namespace AngleAssert
                 throw new ArgumentException("Selector cannot be empty.", nameof(selector));
             }
 
-            var rootNode = GetRootElement(html);
+            var expectedWalker = CreateTreeNodeList(ParseHtml(expected, true));
+            var root = ParseHtml(html, _options.TreatHtmlAsFragment);
 
             // Default selection mode will only need the first element
             if (_options.ElementSelectionMode == ElementSelectionMode.First)
             {
-                var element = rootNode.QuerySelector(selector);
-                return element == null ? HtmlCompareResult.ElementNotFound : Equals(expected, element);
+                var element = root.QuerySelector(selector);
+                if (element is null)
+                {
+                    return HtmlCompareResult.ElementNotFound;
+                }
+
+                return MatchesElement(expected, expectedWalker, element);
             }
 
             // All other selection modes needs all elements
-            var elements = rootNode.QuerySelectorAll(selector);
+            var elements = root.QuerySelectorAll(selector);
             if (elements.Length == 0)
             {
                 return HtmlCompareResult.ElementNotFound;
@@ -152,10 +134,10 @@ namespace AngleAssert
                     return HtmlCompareResult.Mismatch(reason: HtmlCompareMismatchReason.MultipleElementsFound);
                 }
 
-                return Equals(expected, elements[0]);
+                return MatchesElement(expected, expectedWalker, elements[0]);
             }
 
-            var results = elements.Select(el => Equals(expected, el));
+            var results = elements.Select(el => MatchesElement(expected, expectedWalker, el));
 
             if (_options.ElementSelectionMode == ElementSelectionMode.All)
             {
@@ -188,45 +170,32 @@ namespace AngleAssert
                 return HtmlCompareResult.Mismatch(expected, html);
             }
 
-            if (_options.TreatHtmlAsFragment)
-            {
-                var parentElement = ParseFragment(html);
-                return Equals(expected, parentElement);
-            }
+            var expectedWalker = CreateTreeNodeList(ParseHtml(expected, _options.TreatHtmlAsFragment));
+            var htmlWalker = CreateTreeNodeList(ParseHtml(html, _options.TreatHtmlAsFragment));
 
-            return ElementsAreEqual(_parser.ParseDocument(expected), _parser.ParseDocument(html)) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, html);
+            return TreesAreEqual(expectedWalker, htmlWalker) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, html);
         }
 
-        private HtmlCompareResult Equals(string expected, IElement element)
+        private HtmlCompareResult MatchesElement(string expected, TreeNodeList expectedWalker, IElement element)
         {
-            var expectedParentElement = ParseFragment(expected);
-            
-            if (_options.IncludeSelectedElement)
-            {
-                if (expectedParentElement.ChildElementCount > 1)
-                {
-                    return HtmlCompareResult.Mismatch(expected, element.OuterHtml);
-                }
-
-                return ElementsAreEqual(expectedParentElement.FirstElementChild, element) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, element.OuterHtml);
-            }
-
-            return ElementsAreEqual(expectedParentElement.ChildNodes, element.ChildNodes) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, element.InnerHtml);
+            var elementWalker = CreateTreeNodeList(element, _options.IncludeSelectedElement);
+            return TreesAreEqual(expectedWalker, elementWalker) ? HtmlCompareResult.Match : HtmlCompareResult.Mismatch(expected, element.InnerHtml);
         }
 
-        private bool ElementsAreEqual(INodeList listX, INodeList listY)
+        private bool TreesAreEqual(TreeNodeList expected, TreeNodeList candidate)
         {
-            foreach ((var nodeX, var nodeY) in ZipAll(listX, listY, SignificantNodes))
+            foreach (var (itemX, itemY) in ZipAll(expected, candidate))
             {
-                if (!ElementsAreEqual(nodeX, nodeY))
+                if (!NodesAreEqual(itemX, itemY))
                 {
                     return false;
                 }
             }
+
             return true;
         }
 
-        private bool ElementsAreEqual(INode nodeX, INode nodeY)
+        private bool NodesAreEqual(INode nodeX, INode nodeY)
         {
             if (nodeX?.NodeType != nodeY?.NodeType)
             {
@@ -235,6 +204,11 @@ namespace AngleAssert
 
             if (nodeX.NodeType == NodeType.Text)
             {
+                if (ShouldTrimTextContent(nodeX.ParentElement))
+                {
+                    return _options.TextComparer.Equals(nodeX.TextContent.Trim(), nodeY.TextContent.Trim());
+                }
+
                 // Text nodes don't have any children
                 return _options.TextComparer.Equals(nodeX.TextContent, nodeY.TextContent);
             }
@@ -263,23 +237,6 @@ namespace AngleAssert
                 {
                     return false;
                 }
-            }
-
-            if (nodeX.HasChildNodes)
-            {
-                if (!nodeY.HasChildNodes)
-                {
-                    return false;
-                }
-
-                if (!ElementsAreEqual(nodeX.ChildNodes, nodeY.ChildNodes))
-                {
-                    return false;
-                }
-            }
-            else if (nodeY.HasChildNodes)
-            {
-                return false;
             }
 
             return true;
@@ -367,24 +324,39 @@ namespace AngleAssert
 
         int IEqualityComparer<string>.GetHashCode(string obj) => throw new NotSupportedException();
 
-        private bool SignificantNodes(INode node)
+        private IElement ParseHtml(string html, bool treatAsFragment)
         {
-            if (node.NodeType == NodeType.Comment)
+            if (treatAsFragment && !FragmentIsDocument(html))
             {
-                return false;
+                var fragmentDoc = CreateStandardDocument();
+                fragmentDoc.Body.InnerHtml = html;
+                return fragmentDoc.Body;
             }
 
-            if (_options.IgnoreEmptyTextNodes && node.NodeType == NodeType.Text)
-            {
-                return !string.IsNullOrWhiteSpace(node.NodeValue);
-            }
-            return true;
+            var doc = _parser.ParseDocument(html);
+            return doc.DocumentElement;
         }
 
-        private static IEnumerable<(T itemX, T itemY)> ZipAll<T>(IEnumerable<T> listX, IEnumerable<T> listY, Func<T, bool> predicate)
+        private TreeNodeList CreateTreeNodeList(IElement root, bool includeRoot = false) => new TreeNodeList(root, _options.IgnoreEmptyTextNodes, includeRoot);
+
+        private IHtmlDocument CreateStandardDocument() => _parser.ParseDocument(StandardContextHtml);
+
+        private static bool FragmentIsDocument(string html) => html.StartsWith("<!DOCTYPE html>") || html.StartsWith("<html>");
+
+        // In reality this algoritm is significantly more complex
+        private static bool ShouldTrimTextContent(IElement element) => !InlineElements.Contains(element.TagName);
+
+        private static readonly HashSet<string> InlineElements = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            using (var listXenum = listX.Where(predicate).GetEnumerator())
-            using (var listYenum = listY.Where(predicate).GetEnumerator())
+            "a", "abbr", "acronym", "audio", "b", "bdi", "bdo", "big", "br", "button", "canvas", "cite", "code", "data", "datalist", "del", "dfn", "em", "embed", "i", "iframe", "img", "input", "ins", "kbd",
+            "label", "map", "mark", "meter", "noscript", "object", "output", "picture", "progress", "q", "ruby", "s", "samp", "script", "select", "slot", "small", "span", "strong", "sub", "sup", "svg", "template",
+            "textarea", "time", "u", "tt", "var", "video", "wbr"
+        };
+
+        private static IEnumerable<(T itemX, T itemY)> ZipAll<T>(IEnumerable<T> listX, IEnumerable<T> listY)
+        {
+            using (var listXenum = listX.GetEnumerator())
+            using (var listYenum = listY.GetEnumerator())
             {
                 while (listXenum.MoveNext())
                 {
@@ -403,6 +375,61 @@ namespace AngleAssert
                 {
                     yield return (default(T), listYenum.Current);
                 }
+            }
+        }
+
+        private class TreeNodeList : IEnumerable<INode>
+        {
+            private readonly IElement _root;
+            private readonly bool _includeRoot;
+            private readonly bool _ignoreEmptyTextNodes;
+
+            public TreeNodeList(IElement root, bool ignoreEmptyTextNodes = false, bool includeRoot = false)
+            {
+                _root = root;
+                _includeRoot = includeRoot;
+                _ignoreEmptyTextNodes = ignoreEmptyTextNodes;
+            }
+
+            public IEnumerator<INode> GetEnumerator()
+            {
+                var root = _includeRoot ? _root.Parent : _root;
+                return new TreeWalkerEnumerator(_root.Owner.CreateTreeWalker(root, ~FilterSettings.Comment, NodeFilter));
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            private FilterResult NodeFilter(INode node)
+            {
+                if (_ignoreEmptyTextNodes && node.NodeType == NodeType.Text)
+                {
+                    return string.IsNullOrWhiteSpace(node.NodeValue) ? FilterResult.Skip : FilterResult.Accept;
+                }
+
+                // We must filter out siblings when including the root element
+                if (_includeRoot && !_root.Equals(node) && node.IsSiblingOf(_root))
+                {
+                    return FilterResult.Reject;
+                }
+
+                return FilterResult.Accept;
+            }
+
+            private class TreeWalkerEnumerator : IEnumerator<INode>
+            {
+                private readonly ITreeWalker _walker;
+
+                public TreeWalkerEnumerator(ITreeWalker walker)
+                {
+                    _walker = walker;
+                }
+
+                public INode Current => _walker.Current;
+                object IEnumerator.Current => Current;
+
+                public void Dispose() { }
+                public bool MoveNext() => _walker.ToNext() != null;
+                public void Reset() => _walker.Current = _walker.Root;
             }
         }
     }

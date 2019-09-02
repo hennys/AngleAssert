@@ -32,6 +32,8 @@ namespace AngleAssert
         [Theory]
         [InlineData("<p>text</p>", "<p>text</p>")]
         [InlineData("<p>text</p>", " <p>text</p> ")]
+        [InlineData("<p>text</p>", "<p> text </p>")]
+        [InlineData("<div>text</div>", "<div>\r\ntext\r\n</div>")]
         public void Equals_WithMatchingHtmlFragments_ShouldReturnMatch(string expected, string candidate)
         {
             Assert.True(HtmlComparer.Fragment.Equals(expected, candidate));
@@ -39,7 +41,6 @@ namespace AngleAssert
 
         [Theory]
         [InlineData("<p>text</p>", "<strong>text</strong>")]
-        [InlineData("<p>text</p>", "<p> text </p>")]
         [InlineData("<p>text</p>", "<p><strong>text</strong></p>")]
         [InlineData("<p>text</p>", "<p>text<strong>content</strong></p>")]
         [InlineData("<p>text<strong>content</strong></p>", "<p>text</p>")]
@@ -65,7 +66,7 @@ namespace AngleAssert
         }
 
         [Fact]
-        public void Equals_WhenHtmlIsMissingElmenent_ShouldReturnMismatch()
+        public void Equals_WhenHtmlIsMissingElement_ShouldReturnMismatch()
         {
             const string expected = "<p><span>text</span><span>content</span></p>";
             const string candidate = "<p><span>text</span></p>";
@@ -450,11 +451,22 @@ namespace AngleAssert
         public void Equals_WithSelectedElementComparisonOn_WhenSelectedElementMatchesExpected_ShouldReturnMatch()
         {
             const string expected = "<p id='one'>text</p>";
-            const string candidate = "<div><p id='one'>text</p><div>";
+            const string candidate = "<div><p id='one'>text</p></div>";
 
-            var comparer = new HtmlComparer(new HtmlCompareOptions { IncludeSelectedElement = true });
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, IncludeSelectedElement = true });
 
             Assert.True(comparer.Equals(expected, candidate, "div > p"));
+        }
+
+        [Fact]
+        public void Equals_WithSelectedElementComparisonOn_WhenSelectedElementMatchesExpectedAndHasSiblings_ShouldReturnMatch()
+        {
+            const string expected = "<p id='one'>text</p>";
+            const string candidate = "<div><p id='one'>text</p><p>next</p></div>";
+
+            var comparer = new HtmlComparer(new HtmlCompareOptions { TreatHtmlAsFragment = true, IncludeSelectedElement = true });
+
+            Assert.True(comparer.Equals(expected, candidate, "#one"));
         }
 
         [Fact]
@@ -635,7 +647,7 @@ namespace AngleAssert
         {
             Assert.False(result.Matches, "Expected a mismatch, but was a match.");
 
-            var expectedResult = HtmlCompareResult.Mismatch(expected, actual?.Replace('\'', '"'), reason);
+            var expectedResult = HtmlCompareResult.Mismatch(expected, actual, reason);
 
             Assert.Equal(expectedResult, result);
         }
