@@ -38,3 +38,10 @@ steps:
     nobuild: true
     outputDir: '$(Build.ArtifactStagingDirectory)'
     arguments: '--configuration $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'push'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+    nuGetFeedType: 'internal'
+    publishVstsFeed: 'dd9f5193-2351-487c-9524-ed3210ada122'
