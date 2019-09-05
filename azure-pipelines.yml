@@ -18,18 +18,18 @@ steps:
     version: '2.2.401'
   displayName: 'Install .NET Core SDK'
 
-- script: dotnet restore
-  displayName: Restore
-
-- script: dotnet build --no-restore --configuration $(buildConfiguration)
+- task: DotNetCoreCLI@2
   displayName: Build
+  inputs:
+    command: build
+    arguments: '--configuration $(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
   displayName: Test
   inputs:
     command: test
     publishTestResults: true
-    arguments: '--no-restore'
+    arguments: '--no-restore --configuration $(buildConfiguration) --collect "Code Coverage"'
 
 - task: DotNetCoreCLI@2
   displayName: Pack
