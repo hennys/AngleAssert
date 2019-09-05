@@ -19,6 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(SolutionDir)LICENSE" Pack="true" PackagePath=""/>
+    <Content Include="$(SolutionDir)LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>
