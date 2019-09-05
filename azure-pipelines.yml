@@ -9,6 +9,9 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  buildConfiguration: 'Release'
+
 steps:
 - task: DotNetCoreInstaller@0
   inputs:
@@ -30,6 +33,8 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: Pack
+  nobuild: true
   inputs:
     command: pack
-    arguments: '--no-restore --configuration $(buildConfiguration)'
+    outputDir: '$(Build.ArtifactStagingDirectory)'
+    arguments: '--configuration $(buildConfiguration)'
