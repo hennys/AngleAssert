@@ -18,22 +18,18 @@ steps:
 - script: dotnet restore
   displayName: Restore
 
-- task: DotNetCoreCLI@2
+- script: dotnet build --no-restore --configuration $(buildConfiguration)
   displayName: Build
-  inputs:
-    command: build
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-restore'
 
 - task: DotNetCoreCLI@2
   displayName: Test
   inputs:
     command: test
-    projects: '**/Test/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-restore --no-build'
+    publishTestResults: true
+    arguments: '--no-restore'
 
 - task: DotNetCoreCLI@2
   displayName: Pack
   inputs:
     command: pack
-    arguments: '--configuration $(buildConfiguration) --no-restore --no-build'
+    arguments: '--no-restore --configuration $(buildConfiguration)'
