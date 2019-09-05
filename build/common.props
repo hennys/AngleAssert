@@ -7,7 +7,7 @@
     <Authors>Henrik Nystrom</Authors>
     <Copyright>© 2019 Henrik Nystrom</Copyright>
     <PackageProjectUrl>http://github.com/hennys/AngleAssert</PackageProjectUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>AngleAssert</PackageTags>
     <PackageOutputPath>..\..\$(ProjectDir)artifacts\</PackageOutputPath>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -18,7 +18,4 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="$(SolutionDir)LICENSE" Pack="true" PackagePath="" />
-  </ItemGroup>
 </Project>
