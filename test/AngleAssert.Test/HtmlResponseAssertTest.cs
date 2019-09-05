@@ -34,6 +34,14 @@ namespace AngleAssert
         }
 
         [Fact]
+        public async Task Html_WhenResponseStatusIsNotOk_ShouldThrow()
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.NotFound) { Content = new StringContent("<div>two</div>") };
+
+            await Assert.ThrowsAsync<HttpRequestException>(async () => await Assert.Html("<p>one</p>", response));
+        }
+
+        [Fact]
         public async Task HtmlElement_WhenHtmlElementIsNotFound_ShouldReportReason()
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<div><p>one</p></div>") };

@@ -137,6 +137,7 @@ namespace Xunit
         /// </summary>
         /// <param name="html">The HTML document that should be asserted.</param>
         /// <param name="selector">The selector used to find an element.</param>
+        /// <exception cref="HtmlContainsException">Thrown when the HTML document doesn't contain any element that matches the selector.</exception>
         public static void HtmlContains(string html, string selector)
         {
             GuardArgumentNotNull(nameof(selector), selector);
@@ -152,6 +153,7 @@ namespace Xunit
         /// </summary>
         /// <param name="html">The HTML fragment that should be asserted.</param>
         /// <param name="selector">The selector used to find an element.</param>
+        /// <exception cref="HtmlContainsException">Thrown when the HTML fragment doesn't contain any element that matches the selector.</exception>
         public static void HtmlFragmentContains(string html, string selector)
         {
             GuardArgumentNotNull(nameof(selector), selector);

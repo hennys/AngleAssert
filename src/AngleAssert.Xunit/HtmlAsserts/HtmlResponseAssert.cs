@@ -16,9 +16,12 @@ namespace Xunit
         /// <summary>
         /// Verifies that the HTML returned in a <see cref="HttpResponseMessage"/> is equivalent to the expected HTML using the default options.
         /// </summary>
+        /// <remarks>
+        /// </remarks>
         /// <param name="expected">The expected HTML document</param>
         /// <param name="response">The <see cref="HttpResponseMessage"/> containing the HTML to be compared against</param>
         /// <exception cref="EqualException">Thrown when the HTML documents are not equivalent</exception>
+        /// <exception cref="HttpRequestException">Thrown when the response is unsuccessful</exception>
 
         public static async Task Html(string expected, HttpResponseMessage response)
         {
@@ -37,6 +40,7 @@ namespace Xunit
         /// <param name="ignoreAdditionalClassNames">Indicates if additional class names on any element in the candidate HTML should be ignored.</param>
         /// <param name="ignoreClassNameOrder">Indicates if the order of class names in the candidate HTML should be ignored</param>
         /// <exception cref="EqualException">Thrown when the HTML strings are not equivalent</exception>
+        /// <exception cref="HttpRequestException">Thrown when the response is unsuccessful</exception>
         public static async Task Html(string expected, HttpResponseMessage response, bool ignoreAdditionalAttributes = false, bool ignoreAdditionalClassNames = false, bool ignoreClassNameOrder = true)
         {
             GuardArgumentNotNull(nameof(expected), expected);
@@ -52,6 +56,7 @@ namespace Xunit
         /// <param name="response">The <see cref="HttpResponseMessage"/> containing the HTML to be compared against</param>
         /// <param name="selector">A selector used to find the element to compare.</param>
         /// <exception cref="HtmlException">Thrown when the HTML elements are not equivalent</exception>
+        /// <exception cref="HttpRequestException">Thrown when the response is unsuccessful</exception>
         public static async Task HtmlElement(string expected, HttpResponseMessage response, string selector)
         {
             GuardArgumentNotNull(nameof(expected), expected);
@@ -73,6 +78,7 @@ namespace Xunit
         /// <param name="ignoreAdditionalClassNames">Indicates if additional class names on any element in the candidate HTML should be ignored.</param>
         /// <param name="ignoreClassNameOrder">Indicates if the order of class names in the candidate HTML should be ignored</param>
         /// <exception cref="HtmlException">Thrown when the HTML elements are not equivalent</exception>
+        /// <exception cref="HttpRequestException">Thrown when the response is unsuccessful</exception>
         public static async Task HtmlElement(string expected, HttpResponseMessage response, string selector, ElementComparisonMode elementComparisonMode = ElementComparisonMode.InnerHtml, ElementSelectionMode elementSelectionMode = ElementSelectionMode.First, bool ignoreAdditionalAttributes = false, bool ignoreAdditionalClassNames = false, bool ignoreClassNameOrder = true)
         {
             GuardArgumentNotNull(nameof(expected), expected);
@@ -87,6 +93,8 @@ namespace Xunit
         /// </summary>
         /// <param name="response">The <see cref="HttpResponseMessage"/> containing the HTML that should be asserted.</param>
         /// <param name="selector">The selector used to find an element.</param>
+        /// <exception cref="HtmlContainsException">Thrown when the HTML document doesn't contain any element that matches the selector.</exception>
+        /// <exception cref="HttpRequestException">Thrown when the response is unsuccessful</exception>
         public static async Task HtmlContains(HttpResponseMessage response, string selector)
         {
             GuardArgumentNotNull(nameof(response), response);
